@@ -73,5 +73,12 @@ values(obra_seq.nextval, '985-58-558-0000-8', 'programação,logica', 'Marcelo G
 insert into obra(obra_id, obra_isbn, obra_palavra_chave, obra_autor, obra_editora, obra_titulo, obra_num_edicao, obra_qtde_total, cat_obra_cod)
 values(obra_seq.nextval, '020-11-332-2012-0', 'banco, dados', 'Carlos A. Heuser', 'BooksMark', 'Projeto de Banco de Dados', 999, 10, 'BD');
 
+-- Inserir em exemplar
+
+insert into exemplar(exemplar_id, obra_id) values(exemplar_seq.nextval, 1);
+insert into exemplar(exemplar_id, obra_id) values(exemplar_seq.nextval, 2);
+insert into exemplar(exemplar_id, obra_id) values(exemplar_seq.nextval, 3);
+insert into exemplar(exemplar_id, obra_id) values(exemplar_seq.nextval, 4);
+insert into exemplar(exemplar_id, obra_id) values(exemplar_seq.nextval, 5);
 
 

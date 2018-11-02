@@ -65,9 +65,15 @@ nocycle;
 
 create table exemplar(
     exemplar_id number primary key,
-    exemplar_status varchar(20) default 'Disponível',
+    exemplar_status varchar(20) default 'Disponivel',
     obra_id number(6) not null,
     
     constraint obra_id_fk foreign key(obra_id) references obra(obra_id) on delete cascade
 );
 
+create sequence exemplar_seq
+increment by 1
+start with 1
+maxvalue 100000
+nocache
+nocycle;
