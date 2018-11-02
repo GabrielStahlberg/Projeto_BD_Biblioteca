@@ -77,3 +77,47 @@ start with 1
 maxvalue 100000
 nocache
 nocycle;
+
+create table reserva(
+    reserva_id number(6) primary key,
+    reserva_data date not null,
+    leitor_id number(6) not null, 
+    obra_id number(6) not null, 
+    
+    foreign key(leitor_id) references leitor(leitor_id) on delete cascade,
+    foreign key(obra_id) references obra(obra_id) on delete cascade
+);
+
+create sequence reserva_seq
+increment by 1
+start with 1
+maxvalue 100000
+nocache
+nocycle;
+
+create table funcionario(
+    func_prontuario varchar(20) primary key,
+    func_endereco varchar(100) not null, 
+    func_nome varchar(50) not null, 
+    func_data_nasc date not null, 
+    func_telefone varchar(50)
+);
+
+create table emprestimo(
+    emp_id number(6) primary key,
+    emp_data date not null,
+    emp_data_real_dev date,
+    emp_data_prev_dev date not null,
+    exemplar_id number not null,
+    leitor_id number(6) not null,
+    
+    foreign key(leitor_id) references leitor(leitor_id) on delete cascade,
+    foreign key(exemplar_id) references exemplar(exemplar_id) on delete cascade
+);
+
+create sequence emprestimo_seq
+increment by 1
+start with 1
+maxvalue 100000
+nocache
+nocycle;

@@ -77,8 +77,16 @@ values(obra_seq.nextval, '020-11-332-2012-0', 'banco, dados', 'Carlos A. Heuser'
 
 insert into exemplar(exemplar_id, obra_id) values(exemplar_seq.nextval, 1);
 insert into exemplar(exemplar_id, obra_id) values(exemplar_seq.nextval, 2);
-insert into exemplar(exemplar_id, obra_id) values(exemplar_seq.nextval, 3);
+insert into exemplar(exemplar_id, obra_id) values(exemplar_seq.nextval, 3)
 insert into exemplar(exemplar_id, obra_id) values(exemplar_seq.nextval, 4);
 insert into exemplar(exemplar_id, obra_id) values(exemplar_seq.nextval, 5);
+
+-- Inserção em funcionário
+
+insert into funcionario(func_prontuario, func_endereco, func_nome, func_data_nasc, func_telefone) values('2010301', 'Av. Brasil, 122, Centro', 'Roberto da Silva', '05/08/1990', '(16)33391221');
+insert into funcionario(func_prontuario, func_endereco, func_nome, func_data_nasc, func_telefone) values('2154488', 'Av. Alemanha, 133, Vila Berlim', 'Adolf Ballack', '15/02/1992', '(15)33218855');
+insert into funcionario(func_prontuario, func_endereco, func_nome, func_data_nasc, func_telefone) values('3005568', 'Av. Canada, 555, Jardim Vancouver', 'John Smith', '29/11/1991', '(12)59875562');
+insert into funcionario(func_prontuario, func_endereco, func_nome, func_data_nasc, func_telefone) values('2144558', 'Av. Australia, 54, Residencial Sidney', 'James Green', '30/09/1989', '(14)22554154');
+insert into funcionario(func_prontuario, func_endereco, func_nome, func_data_nasc, func_telefone) values('2259636', 'Av. Japao, 999, Vila Tokio', 'Kim Nakamura', '01/01/1992', '(18)99963565');
 
 
