@@ -37,6 +37,11 @@ create table categoria_leitor(
     constraint dias_check check(cat_leitor_max_dias > 6)
 );
 
+create table categoria_obra(
+    cat_obra_cod varchar(10) primary key,
+    cat_obra_desc varchar(256) not null
+);
+
 create table obra(
     obra_id number(6) primary key,
     obra_isbn varchar(20) not null,
@@ -58,11 +63,6 @@ maxvalue 100000
 nocache
 nocycle;
 
-create table categoria_obra(
-    cat_obra_cod varchar(10) primary key,
-    cat_obra_desc varchar(256) not null
-);
-
 create table exemplar(
     exemplar_id number primary key,
     exemplar_status varchar(20) default 'Disponível',
@@ -70,3 +70,4 @@ create table exemplar(
     
     constraint obra_id_fk foreign key(obra_id) references obra(obra_id) on delete cascade
 );
+
