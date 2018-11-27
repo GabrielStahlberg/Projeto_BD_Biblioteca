@@ -120,10 +120,12 @@ create table reserva(
     reserva_id number(6) primary key,
     reserva_data date not null,
     leitor_id number(6) not null, 
-    obra_id number(6) not null, 
+    obra_id number(6) not null,
+    func_prontuario varchar(20) not null,
     
     foreign key(leitor_id) references leitores(leitor_id) on delete cascade,
-    foreign key(obra_id) references obras(obra_id) on delete cascade
+    foreign key(obra_id) references obras(obra_id) on delete cascade,
+    foreign key(func_prontuario) references funcionario(func_prontuario) on delete cascade
 );
 
 create sequence reserva_seq
