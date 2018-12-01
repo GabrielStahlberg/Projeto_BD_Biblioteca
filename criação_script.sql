@@ -159,6 +159,17 @@ maxvalue 100000
 nocache
 nocycle;
 
+create table mensagens_log(
+    log_id number primary key,
+    mensagem varchar2(256) not null
+);
+
+create sequence log_seq
+increment by 1
+start with 1
+maxvalue 100000
+nocache
+nocycle;
 
 -------------------
 
@@ -178,6 +189,8 @@ begin
             update exemplar
             set exemplar_status = 'Disponivel'
             where exemplar_id = :NEW.exemplar_id;
+
+
     end case;
 end;
 /
