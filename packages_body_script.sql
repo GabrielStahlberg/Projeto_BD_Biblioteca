@@ -85,22 +85,33 @@ create or replace package body relatorio as
             dbms_output.put_line(SQLERRM);
     end obras_reservadas;
     
-    procedure historico_leitor(p_leitor_id number) is
+    /* MOSTRA TODO O HISTÓRICO DE EMPRÉSTIMOS DE UM DETERMINADO LEITOR */
+    procedure historico_leitor(p_leitor_id number) is       
+        cursor c_dados is
+            select o.obra_titulo, em.emp_data, em.emp_data_prev_dev, NVL(to_char(em.emp_data_real_dev), 'Pendente') Devolucao
+            from emprestimo em
+            inner join exemplar e
+            on em.exemplar_id = e.exemplar_id
+            inner join obras o
+            on o.obra_id = e.obra_id
+            where em.leitor_id = p_leitor_id;
+            
+        dados_rec c_dados%rowtype;            
     begin
-        select o.obra_titulo, e.emp_data, e.emp_data_prev_dev, e.emp_data_real_dev
-        from emprestimo e
-        inner join exemplar ex using(exemplar_id)
-        inner join obras o on ex.obra_id = o.obra_id
-        where e.leitor_id = p_leitor_id;
-        
-        if sql%notfound then
-            raise invalid_id;
-        end if;
+        dbms_output.put_line('***** HISTÓRICO DE EMPRÉSTIMOS *****');
+        dbms_output.put_line('');
+        open c_dados;
+        loop
+            fetch c_dados into dados_rec;
+            exit when c_dados%notfound;      
+                dbms_output.put_line('Título da obra: ' || dados_rec.obra_titulo || ' | ' || 'Data do empréstimo: ' 
+                    || dados_rec.emp_data || ' | ' || 'Data prevista para devolução: ' || dados_rec.emp_data_prev_dev
+                    || ' | ' || 'Data da devolução: ' || dados_rec.devolucao);
+        end loop;
+        close c_dados;
     exception
-        when invalid_id then
-            dbms_output.put_line('Leitor não encontrado. Tente com outro id.');
         when NO_DATA_FOUND then
-            dbms_output.put_line('Não há obras reservadas');
+            dbms_output.put_line('Não há registros de empréstimos desse leitor');
         when others then
             dbms_output.put_line(SQLCODE);
             dbms_output.put_line(SQLERRM);
