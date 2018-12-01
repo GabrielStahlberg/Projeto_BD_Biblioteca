@@ -1,10 +1,35 @@
 create or replace package body relatorio as
 
+    /* LISTA DE TODAS AS OBRAS QUE ESTÃO EMPRESTADAS NO MOMENTO */
     procedure obras_emprestadas is
+        nome_leitor varchar(50);
+        titulo_obra varchar(50);
+        id_exemplar number;
+        data_emp date;
+        data_prev_emp date;
     begin
-        select *
-        from exemplar
-        where exemplar_status = 'Indisponivel';
+        select l.leitor_nome, o.obra_titulo, e.exemplar_id, em.emp_data, em.emp_data_prev_dev
+        into nome_leitor, titulo_obra, id_exemplar, data_emp, data_prev_emp
+        from emprestimo em
+        inner join leitores l
+        on l.leitor_id = em.leitor_id
+        inner join exemplar e
+        on e.exemplar_id = em.exemplar_id
+        inner join obras o
+        on e.obra_id = o.obra_id
+        where e.exemplar_status = 'Indisponivel'
+        order by o.cat_obra_cod;
+        
+        dbms_output.put_line('***** LISTA DE OBRAS EMPRESTADAS *****');
+        dbms_output.put_line('');
+        
+        dbms_output.put_line('Nome do leitor: ' || nome_leitor);
+        dbms_output.put_line('Título da obra: ' || titulo_obra);
+        dbms_output.put_line('ID do exemaplar: ' || id_exemplar);
+        dbms_output.put_line('Data do empréstimo: ' || data_emp);
+        dbms_output.put_line('Data prevista para devolução: ' || data_prev_emp);
+        dbms_output.put_line('--------------------------------------------');
+        
     exception
         when NO_DATA_FOUND then
             dbms_output.put_line('Todos os exemplares de todas as obras estão disponíveis');
