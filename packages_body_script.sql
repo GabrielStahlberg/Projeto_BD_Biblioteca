@@ -120,83 +120,92 @@ create or replace package body relatorio as
 end relatorio;
 /
 
+
+
+---------------------------------------------
+
+
+
 create or replace package body procedimento as
-    procedure efetuar_reserva(p_obra_id, p_leitor_id, p_pront_func) is
-        disponibilidade number;
-        existeFuncionario number;
-        existeLeitor number;
+    
+    /* EFETUA O EMPRÉSTIMO */
+    procedure efetuar_emprestimo(p_leitor_id number, p_pront_func varchar, p_exemplar_id number) is
+        data_prev date;
+        dias_max number;
+        existe_func boolean;
+        funcionario_exc exception;
+        exemplar_exc exception;
+        estaDisponivel boolean;
     begin
-        disponibilidade := verifica_obra(p_obra_id);
-        existeFuncionario := verifica_funcionario(p_pront_func);
-        existeLeitor := verifica_leitor(p_leitor_id);
-
-        if disponibilidade = 1 then
-            dbms_output.put_line('Não é possível efetuar a reserva, pois há exemplares dessa obra disponíveis.');
-        elsif existeFuncionario = 0 then
-            dbms_output.put_line('Funcionário não existe.');
-        elsif existeLeitor = 0 then
-            dbms_output.put_line('Leitor não existe.');
-        else
-            insert into reserva(reserva_id, reserva_data, leitor_id, obra_id, func_prontuario)
-            values(reserva_seq.nextval, sysdate, p_leitor_id, p_obra_id, p_pront_func);
+        select c.cat_leitor_max_dias into dias_max
+        from leitores l
+        inner join categoria_leitor c
+        on l.cat_leitor_cod = c.cat_leitor_cod
+        where l.leitor_id = p_leitor_id;        
+    
+        data_prev := sysdate + dias_max;        
+        existe_func := verifica_funcionario(p_pront_func);
+        
+        if not existe_func then
+            raise funcionario_exc;
         end if;
-    --exception
-    end efetuar_reserva;
-
-    -- Verifica se há algum exemplar da obra disponível
-    function verifica_obra(p_obra_id number) return number is
-        quantidade number;
-        disponibilidade number := 1; -- 1 = disponivel, 0 = indisponivel
-    begin
-        select count(*) into quantidade
-        from exemplar e
-        where e.obra_id = p_obra_id
-        and e.exemplar_status = 'Disponivel';
-
-        if sql%notfound then
-            raise invalid_id;
+        
+        estadisponivel := verifica_disponibilidade(p_exemplar_id);
+        
+        if not estaDisponivel then
+            raise exemplar_exc;
         end if;
-
-        if quantidade = 0 then
-            disponibilidade := 0;
-        end if;
-        return disponibilidade;
+        
+        insert into emprestimo(emp_id, emp_data, emp_data_prev_dev, exemplar_id, leitor_id, func_prontuario)
+        values(emprestimo_seq.nextval, sysdate, data_prev, p_exemplar_id, p_leitor_id, p_pront_func);
     exception
-        when invalid_id then
-            dbms_output.put_line('Obra não encontrada. Tente com outro id.');
+        when funcionario_exc then
+            dbms_output.put_line('Funcionário não existe.');
+        when exemplar_exc then
+            dbms_output.put_line('O Exemplar não está disponível no momento.');
         when NO_DATA_FOUND then
-            dbms_output.put_line('Não há obras encontradas');
-        when others then
-            dbms_output.put_line(SQLCODE);
-            dbms_output.put_line(SQLERRM);
-    end verifica_obra;
+            dbms_output.put_line('Leitor não encontrado, tente outro id.');
+    end efetuar_emprestimo;
+    
+    /* VERIFICA DISPONIBILIDADE DO EXEMPLAR */
+    function verifica_disponibilidade(p_exemplar_id number) return boolean is
+        disponivel boolean := true;
+        status varchar(20);
+    begin
+        select exemplar_status into status
+        from exemplar e
+        where e.exemplar_id = p_exemplar_id;
+        
+        if status = 'Indisponivel' then
+            disponivel := false;
+        end if;
+        return disponivel;
+    exception
+        when NO_DATA_FOUND then
+            dbms_output.put_line('Exemplar não encontrado, tente outro id.');
+    end verifica_disponibilidade;
 
-    function verifica_funcionario(p_pront_func number) return number is
-        existe number := 1;
+    /* VERIFICA EXISTÊNCIA DO FUNCIONÁRIO */
+    function verifica_funcionario(p_pront_func varchar) return boolean is
+        existe boolean := true;
         achou number;
     begin
         select count(*) into achou
         from funcionario f
         where f.func_prontuario = p_pront_func;
 
+        if sql%notfound then
+            raise invalid_id;
+        end if;
+        
         if achou = 0 then
-            existe := 0;
+            existe := false;
         end if;
         return existe;
-    end verifica_funcionario;
-
-    function verifica_leitor(p_leitor_id number) return number is
-        existe number := 1;
-        achou number;
-    begin
-        select count(*) into achou
-        from leitores l
-        where l.leitor_id = p_leitor_id;
-
-        if achou = 0 then
-            existe := 0;
-        end if;
-        return existe;
-    end verifica_leitor;
+    exception
+        when invalid_id then
+            dbms_output.put_line('');
+    end verifica_funcionario;    
+    
 end procedimento;
 /

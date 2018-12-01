@@ -94,13 +94,6 @@ maxvalue 100000
 nocache
 nocycle;
 
-create sequence obra_seq
-increment by 1
-start with 1
-maxvalue 100000
-nocache
-nocycle;
-
 create table exemplar(
     exemplar_id number primary key,
     exemplar_status varchar(20) default 'Disponivel',
@@ -115,6 +108,15 @@ start with 1
 maxvalue 100000
 nocache
 nocycle;
+
+create table funcionario(
+    func_prontuario varchar(20) primary key,
+    func_endereco varchar(100) not null, 
+    func_nome varchar(50) not null, 
+    func_data_nasc date not null, 
+    func_telefone varchar(50)
+);
+
 
 create table reserva(
     reserva_id number(6) primary key,
@@ -135,13 +137,6 @@ maxvalue 100000
 nocache
 nocycle;
 
-create table funcionario(
-    func_prontuario varchar(20) primary key,
-    func_endereco varchar(100) not null, 
-    func_nome varchar(50) not null, 
-    func_data_nasc date not null, 
-    func_telefone varchar(50)
-);
 
 create table emprestimo(
     emp_id number(6) primary key,
@@ -150,9 +145,11 @@ create table emprestimo(
     emp_data_prev_dev date not null,
     exemplar_id number not null,
     leitor_id number(6) not null,
+    func_prontuario varchar(20) not null,
     
     foreign key(leitor_id) references leitores(leitor_id) on delete cascade,
-    foreign key(exemplar_id) references exemplar(exemplar_id) on delete cascade
+    foreign key(exemplar_id) references exemplar(exemplar_id) on delete cascade,
+    foreign key(func_prontuario) references funcionario(func_prontuario) on delete cascade
 );
 
 create sequence emprestimo_seq
@@ -161,3 +158,22 @@ start with 1
 maxvalue 100000
 nocache
 nocycle;
+
+
+-------------------
+
+-- TRIGGERS
+
+/* ATUALIZA O STATUS DO EXEMPLAR APÓS O EMPRÉSTIMO */
+create or replace trigger atualiza_status
+    after insert on emprestimo
+    for each row
+begin
+    case
+        when inserting then
+            update exemplar
+            set exemplar_status = 'Indisponivel'
+            where exemplar_id = :NEW.exemplar_id;
+    end case;
+end;
+/

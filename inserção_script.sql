@@ -98,7 +98,7 @@ values(obra_seq.nextval, '020-11-332-2012-0', 'BooksMark', 'Projeto de Banco de 
 
 insert into exemplar(exemplar_id, obra_id) values(exemplar_seq.nextval, 1);
 insert into exemplar(exemplar_id, obra_id) values(exemplar_seq.nextval, 2);
-insert into exemplar(exemplar_id, obra_id) values(exemplar_seq.nextval, 3)
+insert into exemplar(exemplar_id, obra_id) values(exemplar_seq.nextval, 3);
 insert into exemplar(exemplar_id, obra_id) values(exemplar_seq.nextval, 4);
 insert into exemplar(exemplar_id, obra_id) values(exemplar_seq.nextval, 5);
 
