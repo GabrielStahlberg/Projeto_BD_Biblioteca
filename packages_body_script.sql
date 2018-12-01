@@ -160,8 +160,18 @@ create or replace package body procedimento as
         existe_func boolean;
         funcionario_exc exception;
         exemplar_exc exception;
+        inativo_exc exception;
         estaDisponivel boolean;
+        leitorAtivo number;
     begin
+        select l.leitor_status_emprestimo into leitor_ativo
+        from leitores l
+        where l.leitor_id = p_leitor_id;
+        
+        if leitorativo = 0 then
+            raise inativo_exc;
+        end if;
+        
         select c.cat_leitor_max_dias into dias_max
         from leitores l
         inner join categoria_leitor c
@@ -186,6 +196,8 @@ create or replace package body procedimento as
     exception
         when funcionario_exc then
             dbms_output.put_line('Funcionário não existe.');
+        when funcionario_exc then
+            dbms_output.put_line('Leitor está inativo para empréstimo. Regularize a situação e tente novamente');
         when exemplar_exc then
             dbms_output.put_line('O Exemplar não está disponível no momento.');
         when NO_DATA_FOUND then
