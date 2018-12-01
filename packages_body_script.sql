@@ -127,6 +127,31 @@ end relatorio;
 
 
 create or replace package body procedimento as
+
+    /* EFETUA A DEVOLUÇÃO */
+    procedure efetuar_devolucao(p_exemplar_id number) is
+        data_prev date;
+        data_real date := sysdate;
+        leitor number;
+    begin
+        select e.emp_data_prev_dev, e.leitor_id into data_prev, leitor
+        from emprestimo e
+        where e.exemplar_id = p_exemplar_id;
+        
+        if data_real > data_prev then
+            update leitores l
+            set l.leitor_status_emprestimo = 0
+            where l.leitor_id = leitor;
+        end if;
+        
+        update emprestimo
+        set emp_data_real_dev = data_real
+        where exemplar_id = p_exemplar_id;
+        
+    exception
+        when NO_DATA_FOUND then
+            dbms_output.put_line('Exemplar não encontrado, tente outro id.');
+    end efetuar_devolucao;
     
     /* EFETUA O EMPRÉSTIMO */
     procedure efetuar_emprestimo(p_leitor_id number, p_pront_func varchar, p_exemplar_id number) is

@@ -166,13 +166,17 @@ nocycle;
 
 /* ATUALIZA O STATUS DO EXEMPLAR APÓS O EMPRÉSTIMO */
 create or replace trigger atualiza_status
-    after insert on emprestimo
+    after insert or update on emprestimo
     for each row
 begin
     case
         when inserting then
             update exemplar
             set exemplar_status = 'Indisponivel'
+            where exemplar_id = :NEW.exemplar_id;
+        when updating then
+            update exemplar
+            set exemplar_status = 'Disponivel'
             where exemplar_id = :NEW.exemplar_id;
     end case;
 end;

@@ -17,7 +17,7 @@ end relatorio;
 create or replace package procedimento as
     procedure efetuar_emprestimo(p_leitor_id number, p_pront_func varchar, p_exemplar_id number);
     /*procedure efetuar_reserva(p_obra_id, p_leitor_id, p_pront_func);*/
-    --procedure efetuar_devolucao(p_exemplar_id number);
+    procedure efetuar_devolucao(p_exemplar_id number);
 
     invalid_id exception;
     
