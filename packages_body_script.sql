@@ -370,4 +370,4 @@ create or replace package body procedimento as
     end verifica_funcionario;    
     
 end procedimento;
-/
+/   
