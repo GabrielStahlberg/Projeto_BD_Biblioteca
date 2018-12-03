@@ -24,10 +24,6 @@ create or replace package procedimento as
     function verifica_funcionario(p_pront_func varchar) return boolean;
     function verifica_disp_exemplar(p_exemplar_id number) return boolean;
     function verifica_disp_obra(p_obra_id number) return boolean;
-    
-    /*function verifica_obra(p_obra_id number) return boolean;
-    function verifica_funcionario(p_pront_func number) return boolean;
-    function verifica_leitor(p_leitor_id number) return boolean;*/
 end procedimento;
 /
 
