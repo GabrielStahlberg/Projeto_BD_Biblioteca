@@ -73,18 +73,39 @@ create or replace package body relatorio as
             dbms_output.put_line(SQLERRM);
     end obras_atrasadas;
     
-    /*procedure obras_reservadas is
+    /* LISTA COM TODAS AS OBRAS QUE ESTÃO RESERVADAS */
+    procedure obras_reservadas is
+        cursor reserva_c is
+            select l.leitor_nome, l.leitor_telefone, l.leitor_email, o.obra_titulo
+            from reserva r
+            inner join obras o
+            on r.obra_id = o.obra_id
+            inner join leitores l
+            on r.leitor_id = l.leitor_id
+            where r.data_emprestimo_efetuado is null;
+        reserva_rec reserva_c%rowtype;
     begin
-        select r.obra_id, o.obra_titulo
-        from reserva r
-        inner join obras o on r.obra_id = o.obra_id;
+        dbms_output.put_line('***** LISTA DE OBRAS RESERVADAS *****');
+        dbms_output.put_line('');
+        open reserva_c;
+        loop
+            fetch reserva_c into reserva_rec;
+            exit when reserva_c%notfound;
+            
+                dbms_output.put_line('Nome do leitor: ' || reserva_rec.leitor_nome);
+                dbms_output.put_line('Telefone do leitor: ' || reserva_rec.leitor_telefone);
+                dbms_output.put_line('E-Mail do leitor: ' || reserva_rec.leitor_email);   
+                dbms_output.put_line('Título da obra: ' || reserva_rec.obra_titulo);
+            
+        end loop;
+        close reserva_c;        
     exception
         when NO_DATA_FOUND then
             dbms_output.put_line('Não há obras reservadas');
         when others then
             dbms_output.put_line(SQLCODE);
             dbms_output.put_line(SQLERRM);
-    end obras_reservadas;*/
+    end obras_reservadas;
     
     /* MOSTRA TODO O HISTÓRICO DE EMPRÉSTIMOS DE UM DETERMINADO LEITOR */
     procedure historico_leitor(p_leitor_id number) is       
