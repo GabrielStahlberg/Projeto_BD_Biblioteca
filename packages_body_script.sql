@@ -40,31 +40,31 @@ create or replace package body relatorio as
             dbms_output.put_line(SQLERRM);
     end obras_emprestadas;
     
+    /* LISTA TODAS OS EXEMPLARES QUE NESSE MOMENTO ESTÃO ATRASADOS */ 
     procedure obras_atrasadas is
-        nome_leitor varchar(50);
-        telefone_leitor varchar(50);
-        email_leitor varchar(50);
-        data_emp date;
-        data_prev_emp date;
+        cursor atrasados_c is
+            select l.leitor_nome, l.leitor_telefone, l.leitor_email, em.emp_data, em.emp_data_prev_dev
+            from emprestimo em
+            inner join leitores l
+            on l.leitor_id = em.leitor_id
+            where em.emp_data_prev_dev < sysdate
+            and em.emp_data_real_dev is null;
+        atrasados_rec atrasados_c%rowtype;
     begin
-        select l.leitor_nome, l.leitor_telefone, l.leitor_email, em.emp_data, em.emp_data_prev_dev
-        into nome_leitor, telefone_leitor, email_leitor, data_emp, data_prev_emp
-        from emprestimo em
-        inner join leitores l
-        on l.leitor_id = em.leitor_id
-        where em.emp_data_prev_dev < sysdate
-        and em.emp_data_real_dev is null;
-        
         dbms_output.put_line('***** LISTA DE OBRAS ATRASADAS *****');
         dbms_output.put_line('');
-        
-        dbms_output.put_line('Nome do leitor: ' || nome_leitor);
-        dbms_output.put_line('Telefone do leitor: ' || telefone_leitor);
-        dbms_output.put_line('E-Mail do leitor: ' || email_leitor);
-        dbms_output.put_line('Data do empréstimo: ' || data_emp);
-        dbms_output.put_line('Data prevista para devolução: ' || data_prev_emp);
-        dbms_output.put_line('--------------------------------------------');
-        
+        open atrasados_c;
+        loop
+            fetch atrasados_c into atrasados_rec;
+            exit when atrasados_c%notfound;            
+                dbms_output.put_line('Nome do leitor: ' || atrasados_rec.leitor_nome);
+                dbms_output.put_line('Telefone do leitor: ' || atrasados_rec.leitor_telefone);
+                dbms_output.put_line('E-Mail do leitor: ' || atrasados_rec.leitor_email);
+                dbms_output.put_line('Data do empréstimo: ' || atrasados_rec.emp_data);
+                dbms_output.put_line('Data prevista para devolução: ' || atrasados_rec.emp_data_prev_dev);
+                dbms_output.put_line('--------------------------------------------');
+        end loop;
+        close atrasados_c;
     exception
         when NO_DATA_FOUND then
             dbms_output.put_line('Não há obras atrasadas');
