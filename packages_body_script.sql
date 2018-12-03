@@ -1,35 +1,37 @@
 create or replace package body relatorio as
-
+    
     /* LISTA DE TODAS AS OBRAS QUE ESTÃO EMPRESTADAS NO MOMENTO */
-    procedure obras_emprestadas is
-        nome_leitor varchar(50);
-        titulo_obra varchar(50);
-        id_exemplar number;
-        data_emp date;
-        data_prev_emp date;
+    procedure obras_emprestadas is        
+        cursor emp_c is
+            select l.leitor_nome, o.obra_titulo, e.exemplar_id, em.emp_data, em.emp_data_prev_dev
+            from emprestimo em
+            inner join leitores l
+            on l.leitor_id = em.leitor_id
+            inner join exemplar e
+            on e.exemplar_id = em.exemplar_id
+            inner join obras o
+            on e.obra_id = o.obra_id
+            where e.exemplar_status != 'Disponivel'
+            and em.emp_data_real_dev is null
+            order by o.cat_obra_cod;
+        emp_rec emp_c%rowtype;
     begin
-        select l.leitor_nome, o.obra_titulo, e.exemplar_id, em.emp_data, em.emp_data_prev_dev
-        into nome_leitor, titulo_obra, id_exemplar, data_emp, data_prev_emp
-        from emprestimo em
-        inner join leitores l
-        on l.leitor_id = em.leitor_id
-        inner join exemplar e
-        on e.exemplar_id = em.exemplar_id
-        inner join obras o
-        on e.obra_id = o.obra_id
-        where e.exemplar_status = 'Indisponivel'
-        order by o.cat_obra_cod;
-        
         dbms_output.put_line('***** LISTA DE OBRAS EMPRESTADAS *****');
         dbms_output.put_line('');
-        
-        dbms_output.put_line('Nome do leitor: ' || nome_leitor);
-        dbms_output.put_line('Título da obra: ' || titulo_obra);
-        dbms_output.put_line('ID do exemaplar: ' || id_exemplar);
-        dbms_output.put_line('Data do empréstimo: ' || data_emp);
-        dbms_output.put_line('Data prevista para devolução: ' || data_prev_emp);
-        dbms_output.put_line('--------------------------------------------');
-        
+        open emp_c;
+        loop
+            fetch emp_c into emp_rec;
+            exit when emp_c%notfound;
+            
+                dbms_output.put_line('Nome do leitor: ' || emp_rec.leitor_nome);
+                dbms_output.put_line('Título da obra: ' || emp_rec.obra_titulo);
+                dbms_output.put_line('ID do exemaplar: ' || emp_rec.exemplar_id);
+                dbms_output.put_line('Data do empréstimo: ' || emp_rec.emp_data);
+                dbms_output.put_line('Data prevista para devolução: ' || emp_rec.emp_data_prev_dev);
+                dbms_output.put_line('--------------------------------------------');
+            
+        end loop;
+        close emp_c;
     exception
         when NO_DATA_FOUND then
             dbms_output.put_line('Todos os exemplares de todas as obras estão disponíveis');
@@ -38,7 +40,6 @@ create or replace package body relatorio as
             dbms_output.put_line(SQLERRM);
     end obras_emprestadas;
     
-    /* LISTA DE TODAS AS OBRAS QUE ESTÃO ATRASADAS NO MOMENTO */
     procedure obras_atrasadas is
         nome_leitor varchar(50);
         telefone_leitor varchar(50);
@@ -72,7 +73,7 @@ create or replace package body relatorio as
             dbms_output.put_line(SQLERRM);
     end obras_atrasadas;
     
-    procedure obras_reservadas is
+    /*procedure obras_reservadas is
     begin
         select r.obra_id, o.obra_titulo
         from reserva r
@@ -83,7 +84,7 @@ create or replace package body relatorio as
         when others then
             dbms_output.put_line(SQLCODE);
             dbms_output.put_line(SQLERRM);
-    end obras_reservadas;
+    end obras_reservadas;*/
     
     /* MOSTRA TODO O HISTÓRICO DE EMPRÉSTIMOS DE UM DETERMINADO LEITOR */
     procedure historico_leitor(p_leitor_id number) is       
@@ -117,22 +118,17 @@ create or replace package body relatorio as
             dbms_output.put_line(SQLERRM);
     end historico_leitor;
     
+    /* FAZ UMA CONSULTA PARA VERIFICAR DETERMINADA OBRA */
     procedure consulta_obra(p_obra_id number) is
         totalObra number;
         titulo varchar(256);
         qtdeEmprestados number;
         qtdeReservados number;
         qtdeDisponivel number;
+        situacao varchar(20) := 'Disponível';
     begin
-        select obra_qtde_total into totalObra
-        from obras
-        where obra_id = p_obra_id;
-        
-        if sql%notfound then
-            raise invalid_id;
-        end if;
-        
-        select obra_titulo into titulo
+        select obra_qtde_total, obra_titulo
+        into totalObra, titulo
         from obras
         where obra_id = p_obra_id;
         
@@ -145,31 +141,25 @@ create or replace package body relatorio as
         from reserva r
         where r.obra_id = p_obra_id;
         
-        select count(*) into qtdeDisponivel
-        from exemplar e
-        where e.obra_id = p_obra_id
-        and e.exemplar_status = 'Disponivel';
+        qtdeDisponivel := totalobra - qtdeemprestados;
         
-        if qtdeEmprestados = totalObras then
-            dbms_output.put_line('Situação: Indisponível');
-        else
-            dbms_output.put_line('Situação: Disponível');
+        if qtdeEmprestados = totalObra then
+            situacao := 'Indisponível';
+        end if;        
+            dbms_output.put_line('Situação: ' || situacao);
             dbms_output.put_line('Título: ' || titulo);
             dbms_output.put_line('Qtde exemplares: ' || totalObra);
             dbms_output.put_line('Qtde emprestado: ' || qtdeEmprestados);
             dbms_output.put_line('Qtde reservados: ' || qtdeReservados);
             dbms_output.put_line('Qtde Disponível: ' || qtdeDisponivel);
-        end if;
 
     exception
-        when invalid_id then
-            dbms_output.put_line('Obra não encontrada. Tente com outro id.');
         when NO_DATA_FOUND then
             dbms_output.put_line('Não há obras encontradas');
         when others then
             dbms_output.put_line(SQLCODE);
             dbms_output.put_line(SQLERRM);
-    end consulta_obra;    
+    end consulta_obra;
 end relatorio;
 /
 
