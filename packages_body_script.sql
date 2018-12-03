@@ -261,10 +261,12 @@ create or replace package body procedimento as
         leitorNome varchar(50);
         id_obra number;
         possuiReserva number;
+        data_emp_reserva number;
     begin
         select e.emp_data_prev_dev, e.leitor_id into data_prev, leitor
         from emprestimo e
-        where e.exemplar_id = p_exemplar_id;
+        where e.exemplar_id = p_exemplar_id
+        and e.emp_data_real_dev is null;
         
         -- VERIFICA SE ENTREGOU NO PRAZO
         if data_real > data_prev then
@@ -286,7 +288,12 @@ create or replace package body procedimento as
         from reserva r
         where r.obra_id = id_obra;
         
-        if possuiReserva > 0 then
+        select count(*) into data_emp_reserva
+        from reserva r
+        where r.obra_id = id_obra
+        and r.data_emprestimo_efetuado is null;
+        
+        if possuiReserva > 0 and data_emp_reserva > 0 then
             select l.leitor_nome into leitorNome
             from reserva r
             inner join leitores l
@@ -326,6 +333,7 @@ create or replace package body procedimento as
         id_obra number;
         id_reserva number;
         data_reserva date;
+        data_emp_reserva number;
     begin
         select l.leitor_status_emprestimo into leitorAtivo
         from leitores l
@@ -359,7 +367,14 @@ create or replace package body procedimento as
         where r.obra_id = id_obra
         and r.leitor_id = p_leitor_id;
         
-        if estavaReservado > 0 then
+        -- VERIFICA SE A RESERVA JÁ OBTEVE O EMPRÉSTIMO
+        select count(*) into data_emp_reserva
+        from reserva r
+        where r.obra_id = id_obra
+        and r.leitor_id = p_leitor_id
+        and r.data_emprestimo_efetuado is null;
+        
+        if estavaReservado > 0 and data_emp_reserva > 0 then
             select r.reserva_id, r.reserva_data
             into id_reserva, data_reserva
             from reserva r
@@ -373,6 +388,7 @@ create or replace package body procedimento as
             set data_emprestimo_efetuado = sysdate
             where r.reserva_id = id_reserva;
         else
+            -- PASSAR O LEITOR COMO PARÂMETRO E VALIDAR SE ELE ESTÁ EMPRESTANDO À PARTIR DE UMA RESERVA
             estadisponivel := verifica_disp_exemplar(p_exemplar_id);        
             if not estaDisponivel then
                 raise exemplar_exc;
@@ -400,11 +416,13 @@ create or replace package body procedimento as
         disponivel boolean := true;
         status varchar(20);
     begin
+        
+    
         select exemplar_status into status
         from exemplar e
         where e.exemplar_id = p_exemplar_id;
         
-        if status = 'Indisponivel' then
+        if status = 'Indisponivel' or status = 'Reservado' then
             disponivel := false;
         end if;
         return disponivel;
@@ -436,4 +454,4 @@ create or replace package body procedimento as
     end verifica_funcionario;    
     
 end procedimento;
-/ 
+/
