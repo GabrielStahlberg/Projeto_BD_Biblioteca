@@ -18,7 +18,7 @@ create table categoria_leitor(
 
 create table leitores(
     leitor_id number(6) primary key,
-    leitor_prontuario varchar(20),            -- Ou deixar um valor default, caso seja usuário externo e não tenha o prontuário.
+    leitor_prontuario varchar(20), -- Ou deixar um valor default, caso seja usuário externo e não tenha o prontuário.
     leitor_nome varchar(50) not null,
     leitor_rg_estado varchar(10) not null,
     leitor_rg varchar(20) not null,
@@ -58,7 +58,8 @@ create table obras(
     obra_qtde_total number not null,
     cat_obra_cod varchar(10) not null,
     
-    constraint cat_obra_fk foreign key(cat_obra_cod) references categoria_obra(cat_obra_cod) on delete cascade
+    constraint cat_obra_fk foreign key(cat_obra_cod)
+         references categoria_obra(cat_obra_cod) on delete cascade
 );
 
 create sequence obra_seq
@@ -121,6 +122,7 @@ create table funcionario(
 create table reserva(
     reserva_id number(6) primary key,
     reserva_data date not null,
+    data_emprestimo_efetuado date,
     leitor_id number(6) not null, 
     obra_id number(6) not null,
     func_prontuario varchar(20) not null,
@@ -163,7 +165,6 @@ create table mensagens_log(
     log_id number primary key,
     mensagem varchar2(256) not null
 );
-
 create sequence log_seq
 increment by 1
 start with 1

@@ -10,11 +10,7 @@ create or replace package relatorio as
     invalid_id exception;
 end relatorio;
 /
-
-
 ---------------------------------------------------
-
-
 create or replace package procedimento as
     procedure efetuar_emprestimo(p_leitor_id number, p_pront_func varchar, p_exemplar_id number);
     procedure efetuar_reserva(p_obra_id number, p_leitor_id number, p_pront_func varchar);

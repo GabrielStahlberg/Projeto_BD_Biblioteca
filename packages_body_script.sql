@@ -207,6 +207,7 @@ create or replace package body procedimento as
             
         busca_rec busca_c%rowtype;
     begin
+        commit;
         -- CASO HAJA ALGUM EXEMPLAR DA OBRA DISPONÍVEL, NÃO PODERÁ SER EFETUADA A RESERVA
         estaDisponivel := verifica_disp_obra(p_obra_id);        
         if estaDisponivel then
@@ -238,10 +239,13 @@ create or replace package body procedimento as
         insert into reserva(reserva_id, reserva_data, leitor_id, obra_id, func_prontuario)
         values(reserva_seq.nextval, sysdate, p_leitor_id, p_obra_id, p_pront_func);
         dbms_output.put_line('Reserva realizada');
+        commit;
     exception
         when NO_DATA_FOUND then
+            rollback;
             dbms_output.put_line('Obra não encontrada, tente outro id.');
         when obra_disponivel_exc then
+            rollback;
             dbms_output.put_line('Não é possível efetuar a reserva. Há exemplar(es) dessa obra disponível(is).');
     end efetuar_reserva;
     
@@ -250,6 +254,7 @@ create or replace package body procedimento as
         qtdeDisponivel number;
         estaDisponivel boolean := true;
     begin
+        commit;
         select count(*) into qtdeDisponivel
         from exemplar e
         where e.obra_id = p_obra_id
@@ -262,6 +267,7 @@ create or replace package body procedimento as
     exception
         when NO_DATA_FOUND then
             dbms_output.put_line('Obra não encontrada, tente outro id.');
+            rollback;
     end verifica_disp_obra;
 
     /* EFETUA A DEVOLUÇÃO DE UM EXEMPLAR */
@@ -274,6 +280,7 @@ create or replace package body procedimento as
         possuiReserva number;
         data_emp_reserva number;
     begin
+        commit;
         select e.emp_data_prev_dev, e.leitor_id into data_prev, leitor
         from emprestimo e
         where e.exemplar_id = p_exemplar_id
@@ -323,10 +330,12 @@ create or replace package body procedimento as
             update exemplar
             set exemplar_status = 'Disponivel'
             where exemplar_id = p_exemplar_id;
-        end if;        
+        end if;
+        commit;        
     exception
         when NO_DATA_FOUND then
             dbms_output.put_line('Exemplar não encontrado, tente outro id.');
+            rollback;
     end efetuar_devolucao;
     
     /* EFETUA O EMPRÉSTIMO DE UM EXEMPLAR */
@@ -346,6 +355,8 @@ create or replace package body procedimento as
         data_reserva date;
         data_emp_reserva number;
     begin
+        commit;
+        /* VERIFICA SE O LEITOR ESTÁ ATIVO, OU SEJA, SE PODE EFETUAR EMPRÉSTIMOS */
         select l.leitor_status_emprestimo into leitorAtivo
         from leitores l
         where l.leitor_id = p_leitor_id;
@@ -354,13 +365,17 @@ create or replace package body procedimento as
             raise inativo_exc;
         end if;
         
+        /* VERIFICA O QTDE MÁXIMA DE DIAS QUE ESSE TIPO DE LEITOR PODE FICAR COM O EXEMPLAR E A PARTIR DISSO 
+            CALCULA A DATA PREVISTA PARA A DEVOLUÇÃO */
         select c.cat_leitor_max_dias into dias_max
         from leitores l
         inner join categoria_leitor c
         on l.cat_leitor_cod = c.cat_leitor_cod
         where l.leitor_id = p_leitor_id;        
     
-        data_prev := sysdate + dias_max;        
+        data_prev := sysdate + dias_max; 
+
+        /* VERIFICA A EXISTÊNCIA DESSE FUNCIONÁRIO */       
         existe_func := verifica_funcionario(p_pront_func);
         
         if not existe_func then
@@ -399,7 +414,6 @@ create or replace package body procedimento as
             set data_emprestimo_efetuado = sysdate
             where r.reserva_id = id_reserva;
         else
-            -- PASSAR O LEITOR COMO PARÂMETRO E VALIDAR SE ELE ESTÁ EMPRESTANDO À PARTIR DE UMA RESERVA
             estadisponivel := verifica_disp_exemplar(p_exemplar_id);        
             if not estaDisponivel then
                 raise exemplar_exc;
@@ -408,18 +422,23 @@ create or replace package body procedimento as
 
         insert into emprestimo(emp_id, emp_data, emp_data_prev_dev, exemplar_id, leitor_id, func_prontuario)
         values(emprestimo_seq.nextval, sysdate, data_prev, p_exemplar_id, p_leitor_id, p_pront_func);
-        
+        commit;
     exception
         when funcionario_exc then
             dbms_output.put_line('Funcionário não existe.');
+            rollback;
         when expirado_exc then
             dbms_output.put_line('Seu período de reserva de 3 dias foi expirado.');
+            rollback;
         when inativo_exc then
             dbms_output.put_line('Leitor está inativo para empréstimo. Regularize a situação e tente novamente');
+            rollback;
         when exemplar_exc then
             dbms_output.put_line('O Exemplar não está disponível no momento.');
+            rollback;
         when NO_DATA_FOUND then
             dbms_output.put_line('Leitor não encontrado, tente outro id.');
+            rollback;
     end efetuar_emprestimo;
     
     /* VERIFICA DISPONIBILIDADE DO EXEMPLAR */
@@ -427,8 +446,6 @@ create or replace package body procedimento as
         disponivel boolean := true;
         status varchar(20);
     begin
-        
-    
         select exemplar_status into status
         from exemplar e
         where e.exemplar_id = p_exemplar_id;
