@@ -5,6 +5,8 @@ select * from reserva;
 select * from emprestimo;
 select * from mensagens_log;
 select * from funcionario;
+select * from categoria_leitor;
+select * from categoria_obra;
 
 ------------------------------------
 
@@ -15,6 +17,9 @@ drop sequence leitor_seq;
 drop sequence obra_seq;
 drop sequence palavras_chave_seq;
 drop sequence reserva_seq;
+
+commit;
+rollback;
 
 ------------------------------------
 
@@ -70,5 +75,41 @@ end;
 
 begin
     relatorio.consulta_obra(1);
+end;
+/
+
+begin
+    leitor.cadastrar_leitor('TESTE_PRONTUARIO', 'TESTE_NOME', 'TESTE', 'TESTE', 'TESTE', 'TESTE', 'TESTE', 'TESTE_EMAIL',
+'TESTE', 1, '30/12/2049', 'dsdsdsdsdsdsd');
+end;
+/
+
+
+begin
+    leitor.atualizar_leitor_email(70, 'TESTE_EMAIL');
+end;
+/
+
+
+begin
+    leitor.atualizar_leitor_telefone(70, '123');
+end;
+/
+
+
+begin
+    leitor.excluir_leitor(70000);
+end;
+/
+
+
+begin
+    categ_leitor.cadastrar_categoria_leitor('TESTE', 'TESTE', 8);
+end;
+/
+
+
+begin
+    func.excluir_funcionario('2010301');
 end;
 /
