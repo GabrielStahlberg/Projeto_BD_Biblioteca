@@ -191,3 +191,16 @@ begin
     end case;
 end;
 /
+
+-------------------
+
+-- VIEW
+
+create or replace view atrasados_view as
+    select l.leitor_nome, l.leitor_telefone, l.leitor_email, em.emp_data, em.emp_data_prev_dev
+    from emprestimo em
+    inner join leitores l
+    on l.leitor_id = em.leitor_id
+    where em.emp_data_prev_dev < sysdate
+    and em.emp_data_real_dev is null
+    with read only;

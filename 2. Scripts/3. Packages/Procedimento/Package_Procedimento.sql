@@ -102,18 +102,49 @@ create or replace package body procedimento as
         id_obra number;
         possuiReserva number;
         data_emp_reserva number;
+        leitor_status number;
+        qtdeAtrasado number;
+        id_exemplar_atrasado number;
     begin
         commit;
         select e.emp_data_prev_dev, e.leitor_id into data_prev, leitor
         from emprestimo e
         where e.exemplar_id = p_exemplar_id
         and e.emp_data_real_dev is null;
+
+        -- VERIFICA O STATUS DO LEITOR
+        select l.leitor_status_emprestimo into leitor_status
+        from leitores l
+        where l.leitor_id = leitor;
+
+        if leitor_status = 0 then
+            select count(*) into qtdeAtrasado
+            from emprestimo e
+            where e.emp_data_prev_dev < sysdate
+            and e.emp_data_real_dev is null
+            and e.leitor_id = leitor;
+        end if;
         
         -- VERIFICA SE ENTREGOU NO PRAZO
         if data_real > data_prev then
             update leitores l
             set l.leitor_status_emprestimo = 0
             where l.leitor_id = leitor;
+
+            if qtdeAtrasado = 1 then
+                select e.exemplar_id into id_exemplar_atrasado
+                from emprestimo e
+                where e.leitor_id = leitor
+                and e.emp_data_real_dev is null;
+
+                if id_exemplar_atrasado = p_exemplar_id then
+                    update leitores l
+                    set l.leitor_status_emprestimo = 1
+                    where l.leitor_id = leitor;
+                end if;
+
+            end if;
+
         end if;
         
         update emprestimo
